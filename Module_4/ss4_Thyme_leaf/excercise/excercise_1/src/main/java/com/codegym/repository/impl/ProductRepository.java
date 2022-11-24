@@ -2,6 +2,9 @@ package com.codegym.repository.impl;
 
 import com.codegym.model.Product;
 import com.codegym.repository.IProductRepository;
+import org.hibernate.Session;
+
+import org.hibernate.Transaction;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -10,18 +13,23 @@ import java.util.List;
 @Repository
 public class ProductRepository implements IProductRepository {
     private static final List<Product> productList = new ArrayList<>();
-    static {
-        productList.add(new Product(1,"Iphone X","10.000.000 VNĐ","Gold","Apple"));
-        productList.add(new Product(2,"SamSung Note 10","11.000.000 VNĐ","Violet","SamSung"));
-        productList.add(new Product(3,"Iphone 13","14.000.000 VNĐ","Black","Apple"));
-        productList.add(new Product(4,"SamSung Note 20","22.000.000 VNĐ","Blue","SamSung"));
-        productList.add(new Product(5,"Nokia","12.000.000 VNĐ","Blue","Nokia"));
-        productList.add(new Product(6,"Iphone 14","25.000.000 VNĐ","Blue","Apple"));
-        productList.add(new Product(7,"Iphone 14 Pro max","42.000.000 VNĐ","Blue","Apple"));
-    }
+
+
+
+
     @Override
     public List<Product> displayAll(){
-       return productList;
+        Session session = null;
+        List<Product> productList = null;
+        try {
+            session =  ConnectionUtil.sessionFactory.openSession();
+            productList = session.createQuery("FROM Product").getResultList();
+        }finally {
+            if (session != null){
+                session.close();
+            }
+        }
+return productList;
     }
 
     @Override
@@ -31,16 +39,33 @@ public class ProductRepository implements IProductRepository {
 
     @Override
     public Product findById(int id){
-        for (Product product : productList) {
-            if (product.getId() == id)
-                return product;
-        }
-        return null;
+       Session session = null;
+       Product product = null;
+       try {
+           session = ConnectionUtil.sessionFactory.openSession();
+           product = (Product) session.createQuery("FROM Product p where id = :idx").setParameter("idx",id).getSingleResult();
+       }finally {
+           if (session != null){
+               session.close();
+           }
+       }
+       return product;
     }
 
     @Override
     public void edit(int id, Product product){
-
+Session session = null;
+        Transaction transaction = null;
+        try {
+            session = ConnectionUtil.sessionFactory.openSession();
+            transaction = session.beginTransaction();
+            session.merge(product);
+            transaction.commit();
+        }finally {
+            if(session != null){
+                session.close();
+            }
+        }
     }
 
     @Override

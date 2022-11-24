@@ -16,7 +16,7 @@ public class ProductController {
     IProductService productService;
 
     @GetMapping("")
-    public String index(Model model) {
+    public String home(Model model) {
         List<Product> productList = productService.displayAll();
         model.addAttribute("product", productList);
         return "home";
